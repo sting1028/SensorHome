@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <!-- <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script> -->
+    <script src="{{ url_for('static', filename='echarts.min.js') }}"></script>
+</head>
+<body>
+
+    <div id="top" style="width: 1000px;height:600px;"></div>
+    <div id="bottom" style="width: 1000px;height:600px;"></div>
+    <script type="text/javascript">
+        var chart1 = echarts.init(document.getElementById('top'), 'white', {renderer: 'canvas'});
+        var chart2 = echarts.init(document.getElementById('bottom'), 'white', {renderer: 'canvas'});
+        var optionTop = {
+            grid: {top: '20%'},
+            xAxis: {
+                data: [{% for p in x_data %}'{{ p }}', {% endfor %}],
+                name: 'Time'
+            },
+            yAxis: {name: 'Temp(C)', min:15, max:30},
+            series: {
+                name: 'Temp',
+                type: 'line',
+                data: [{% for q in temp %}'{{ q }}', {% endfor %}]
+            }
+        };
+        var optionbBottom = {
+            grid: {bottom: '60%'},
+            xAxis: {
+                data:[{% for p in x_data %}'{{ p }}', {% endfor %}],
+                name: 'Time'
+            },
+            yAxis: {name: 'Pressure(Pa)',min:99000, max:105000},
+            series: 
+            {
+                name: 'Pressure',
+                type: 'line',
+                data: [{% for e in pressure %}'{{ e }}', {% endfor %}],
+            }
+        };
+        chart1.setOption(optionTop);
+        chart2.setOption(optionbBottom);
+    </script> 
+</body>
+</html>
