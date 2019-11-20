@@ -1,5 +1,4 @@
-import smbus2
-
+import smbus2,logging
 
 
 class I2cBase:
@@ -13,9 +12,9 @@ class I2cBase:
         try:
             self.bus.write_byte_data(self.address, reg, value)
             if (self.debug):
-                print(f"I2C: Write {value:#x} to register {reg:#x}")
+                logging.debug(f"I2C: Write {value:#x} to register {reg:#x}")
         except IOError:
-            print(f"Error accessing {self.address:#x}: Check your I2C address")
+            logging.debug(f"Error accessing {self.address:#x}: Check your I2C address")
             return -1
 
     def readU8(self, reg):
@@ -23,10 +22,10 @@ class I2cBase:
         try:
             result = self.bus.read_byte_data(self.address, reg)
             if (self.debug):
-                print(f"I2C: Returned {result:#x} from register {reg:#x}")
+                logging.debug(f"I2C: Returned {result:#x} from register {reg:#x}")
             return result
         except IOError:
-            print(f"Error accessing {self.address:#x}: Check your I2C address")
+            logging.debug(f"Error accessing {self.address:#x}: Check your I2C address")
             return -1
 
     def readU16(self, reg):
@@ -36,10 +35,10 @@ class I2cBase:
             result = (hibyte << 8) + self.bus.read_byte_data(
                 self.address, reg + 1)
             if (self.debug):
-                print(f"I2C: Returned {result:#x} from register {reg:#x}")
+                logging.debug(f"I2C: Returned {result:#x} from register {reg:#x}")
             return result
         except IOError:
-            print(f"Error accessing {self.address:#x}: Check your I2C address")
+            logging.debug(f"Error accessing {self.address:#x}: Check your I2C address")
             return -1
 
     def readS16(self, reg):
@@ -51,10 +50,10 @@ class I2cBase:
             result = (hibyte << 8) + self.bus.read_byte_data(
                 self.address, reg + 1)
             if (self.debug):
-                print(f"I2C: Returned {result:#x} from register {reg:#x}")
+                logging.debug(f"I2C: Returned {result:#x} from register {reg:#x}")
             return result
         except IOError:
-            print(f"Error accessing {self.address:#x}: Check your I2C address")
+            logging.debug(f"Error accessing {self.address:#x}: Check your I2C address")
             return -1
 
 

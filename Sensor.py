@@ -1,9 +1,7 @@
-import time
+import time, logging
 from I2cBase import I2cBase
 
-
-class BMP085 :
-
+class BMP085:
   # BMP085 Registers
   __CAL_AC1_REG           = 0xAA  # R   Calibration data (16 bits)
   __CAL_AC2_REG           = 0xAC  # R   Calibration data (16 bits)
@@ -44,7 +42,7 @@ class BMP085 :
     try:
       self.mode, self.conversion_time = self.__convertOperationMode(mode)
     except KeyError:
-      print('Invalid Mode: Using STANDARD by default')
+      logging.debug('Invalid Mode: Using STANDARD by default')
       self.mode = 1
       self.conversion_time = 0.0075
 
@@ -81,7 +79,7 @@ class BMP085 :
     time.sleep(self.conversion_time)
     raw_temp = self.i2c.readU16(self.__TEMPDATA_REG)
     if (self.debug):
-      print(f"Debug: Raw Temp: {raw_temp:#x} ({raw_temp})")
+      logging.debug(f"Debug: Raw Temp: {raw_temp:#x} ({raw_temp})")
     return raw_temp
 
   def __readRawPressure(self):
@@ -93,7 +91,7 @@ class BMP085 :
     xlsb = self.i2c.readU8(self.__PRESSUREDATA_REG+2)
     raw_pressure = ((msb << 16) + (lsb << 8) + xlsb) >> (8 - self.mode)
     if (self.debug):
-      print(f"Debug: Raw Pressure: {raw_pressure:#x} ({raw_pressure})")
+      logging.debug(f"Debug: Raw Pressure: {raw_pressure:#x} ({raw_pressure})")
     return raw_pressure
 
   def readTemperature(self):
@@ -106,7 +104,7 @@ class BMP085 :
     self.B5 = X1 + X2
     temp = ((self.B5 + 8) >> 4) / 10
     if (self.debug):
-      print(f"Debug: Calibrated temperature = {temp} C")
+      logging.debug(f"Debug: Calibrated temperature = {temp} C")
     return temp
 
   def readPressure(self):
@@ -133,14 +131,14 @@ class BMP085 :
     X2 = (-7375 * p1) >> 16
     p = p1 + ((X1 + X2 + 3791) >> 4)
     if (self.debug):
-      print("Debug: Pressure = %d Pa" % (p))
+      logging.debug("Debug: Pressure = %d Pa" % (p))
     return p
 
   def readAltitude(self, seaLevelPressure=101325, pressure=0):
     "Calculates the altitude in meters"
     altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.1903))
     if (self.debug):
-      print("Debug: Altitude = %d" % (altitude))
+      logging.debug("Debug: Altitude = %d" % (altitude))
       return altitude
     else:
       return 0
