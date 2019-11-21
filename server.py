@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 import os, sys, click, logging, time
-from multiprocessing import Process
+# from multiprocessing import Process
 from threading import Timer
 from pathlib import Path
 from datetime import datetime
@@ -14,8 +14,8 @@ app = Flask(__name__)
 @click.option('--debug', default=True, is_flag=True)
 @click.option('--port', default=8888)
 def startServer(port, debug):
-    logger = logging.getLogger(__name__)
-    logger.info(f'Running SensorHome server in port {port}.')
+    log_config()
+    startDataCollect()
     app.run(port=port, debug=debug, host='0.0.0.0')
 
 
@@ -53,11 +53,12 @@ def log_config():
 
 
 if __name__ == '__main__':
-    log_config()
-    p1 = Process(target=startServer).start()
-    p2 = Process(target=startDataCollect).start()
+    # log_config()
+    # p1 = Process(target=startServer).start()
+    # p2 = Process(target=startDataCollect).start()
     # p1.join()
     # p2.join()
     # # insertDB('11-19-13:49',23.6,100020)
     # fetchDB()
     # creatTB()
+    startServer()
