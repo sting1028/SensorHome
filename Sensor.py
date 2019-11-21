@@ -37,7 +37,6 @@ class BMP085:
         self._cal_MB_data = 0
         self._cal_MC_data = 0
         self._cal_MD_data = 0
-
         # Make sure the specified mode is in the appropriate range
         try:
             self.mode, self.conversion_time = self.__convertOperationMode(mode)

@@ -1,36 +1,33 @@
 from flask import Flask, render_template
-import os, sys, click, logging
+import os, sys, click, logging, time
 from multiprocessing import Process
 from threading import Timer
 from pathlib import Path
 from datetime import datetime
-from DataManager import DataManager
+from SensorDataManager import DataBase, DataCollect
 
+data_base = DataBase(debug=True)
+data_collect = DataCollect(debug=True)
 app = Flask(__name__)
-global data_manager
 
-
-@click.option('debug', default=False, is_flag=True)
+@click.command()
+@click.option('--debug', default=True, is_flag=True)
 @click.option('--port', default=8888)
 def startServer(port, debug):
-    log_config()
-    global data_manager
-    data_manager = DataManager(debug=debug)
     logger = logging.getLogger(__name__)
     logger.info(f'Running SensorHome server in port {port}.')
     app.run(port=port, debug=debug, host='0.0.0.0')
 
 
-def startDataRead():
-    global data_manager
-    data_manager.readSensorData()
-    Timer(60, startDataRead).start()
+def startDataCollect():
+    time_now, temp, pressure = data_collect.readSensorData()
+    data_base.insertDB(time_now=time_now, temp=temp, pressure=pressure)
+    Timer(60, startDataCollect).start()
 
 
 @app.route('/')
 def index():
-    global data_manager
-    results_time, results_temp, results_pressure = data_manager.fetchDB()
+    results_time, results_temp, results_pressure = data_base.fetchDB()
     return render_template('index.html',
                            x_data=results_time,
                            temp=results_temp,
@@ -52,14 +49,15 @@ def log_config():
         filename=log_filename,
         style='{',
     )
-    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    # logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 
 if __name__ == '__main__':
-    p1 = Process(target=startDataRead).start()
-    p2 = Process(target=startServer).start()
-    p1.join()
-    p2.join()
+    log_config()
+    p1 = Process(target=startServer).start()
+    p2 = Process(target=startDataCollect).start()
+    # p1.join()
+    # p2.join()
     # # insertDB('11-19-13:49',23.6,100020)
     # fetchDB()
     # creatTB()

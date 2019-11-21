@@ -4,7 +4,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
-class DataManager:
+class DataBase:
 
     def __init__(self, debug):
         self.debug = debug
@@ -64,13 +64,13 @@ class DataManager:
         db.close()
         return results_time, results_temp, results_pressure
 
-    def readSensorData(self) -> None:
-        # while True:
+class DataCollect:
+    def __init__(self, debug=False, mode='ultra_high', bus=1):
+        self.sensor = BMP085(debug=debug, mode=mode, bus=bus)
+
+    def readSensorData(self) -> tuple:
         time_now = datetime.now().strftime("%m-%d/%H:%M")
-        sensor = BMP085(debug=True, mode='ultra_high', bus=1)
-        temp_readed = sensor.readTemperature()
-        pressure_readed = sensor.readPressure()
-        self.insertDB(time_now=time_now,
-                      temp=temp_readed,
-                      pressure=pressure_readed)
-        # time.sleep(60)
+        temp = self.sensor.readTemperature()
+        pressure = self.sensor.readPressure()
+        return (time_now, temp ,pressure)
+
