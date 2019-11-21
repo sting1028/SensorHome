@@ -17,7 +17,14 @@
             grid: {top: '20%'},
             xAxis: {
                 data: [{% for p in x_data %}'{{ p }}', {% endfor %}],
-                name: 'Time'
+                name: 'Time',
+                axisLabel: {
+            　　　　interval: 180,
+            　　　　formatter: function (value) {
+            　　　　　　var str = value.split("/");
+            　　　　　　return str.join("\n");
+            　　　　}
+            　　}
             },
             yAxis: {name: 'Temp(C)', min:15, max:30},
             series: {
@@ -30,7 +37,14 @@
             grid: {bottom: '60%'},
             xAxis: {
                 data:[{% for p in x_data %}'{{ p }}', {% endfor %}],
-                name: 'Time'
+                name: 'Time',
+                axisLabel:{
+            　　　　interval: 180,
+            　　　　formatter: function (value) {
+            　　　　　　var str = value.split("/");
+            　　　　　　return str.join("\n");
+            　　　　}
+            　　}
             },
             yAxis: {name: 'Pressure(Pa)',min:99000, max:105000},
             series: 
