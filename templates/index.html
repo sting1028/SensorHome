@@ -26,7 +26,12 @@
             　　　　}
             　　}
             },
-            yAxis: {name: 'Temp(C)', min:15, max:30},
+            yAxis: {name: 'Temp(C)', min:function(value) {
+                        return value.min - 1;
+                            }, max:function(value) {
+                        return value.max + 1;
+                            }
+                    },
             series: {
                 name: 'Temp',
                 type: 'line',
@@ -46,7 +51,12 @@
             　　　　}
             　　}
             },
-            yAxis: {name: 'Pressure(Pa)',min:99000, max:105000},
+            yAxis: {name: 'Pressure(Pa)',min:function(value) {
+                        return value.min - 100;
+                            }, max:function(value) {
+                        return value.max + 100;
+                            }
+                    },
             series: 
             {
                 name: 'Pressure',
