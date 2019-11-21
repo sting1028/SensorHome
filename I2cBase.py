@@ -1,6 +1,5 @@
-import smbus2, logger
-
-logger = logger.getLogger(__name__)
+import smbus2, logging
+logger = logging.getLogger(__name__)
 
 
 class I2cBase:

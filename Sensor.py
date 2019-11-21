@@ -1,7 +1,6 @@
-import time, logger
+import time, logging
 from I2cBase import I2cBase
-
-logger = logger.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class BMP085:
