@@ -1,75 +1,20 @@
-from Sensor import BMP085
 from flask import Flask, render_template
-import time, json, pymysql, logging, sys
+import os, sys, click, logging
 from multiprocessing import Process
+from pathlib import Path
+from datetime import datetime
+from DataManager import readSensorData
 
 app = Flask(__name__)
 
-x_data = []
-y_data = {'Temp': [], 'Pressure': []}
 
-
-def creatTB():
-    try:
-        try:
-            db = pymysql.connect("localhost", "sensor", "test123", "sensorDB")
-        except:
-            logging.debug('connect error')
-        cursor = db.cursor()
-        sql = """CREATE TABLE SENSOR (TIME  char(12),TEMP  numeric(4,2),PRESSURE int(7))"""
-        cursor.execute(sql)
-        db.close()
-    except Exception as e:
-        logging.debug(f'creatDB error{e}')
-
-
-def insertDB(time_now: str, temp: float, pressure: int):
-    db = pymysql.connect("localhost", "sensor", "test123", "sensorDB")
-    cursor = db.cursor()
-    sql = f'INSERT INTO SENSOR(TIME, TEMP, PRESSURE) VALUES ("{time_now}", {temp}, {pressure})'
-    try:
-        try:
-            cursor.execute(sql)
-        except Exception as e:
-            logging.debug(f'sql execute error{e}')
-        db.commit()
-    except:
-        db.rollback()
-        logging.debug('insert Error')
-    db.close()
-
-
-def fetchDB():
-    db = pymysql.connect("localhost", "sensor", "test123", "sensorDB")
-    cursor = db.cursor()
-    sql_time = "SELECT TIME FROM SENSOR" ""
-    sql_temp = "SELECT TEMP FROM SENSOR" ""
-    sql_pressure = "SELECT PRESSURE FROM SENSOR" ""
-    try:
-        cursor.execute(sql_time)
-        results_time = [data[0] for data in cursor.fetchall()]
-        cursor.execute(sql_temp)
-        results_temp = [data[0] for data in cursor.fetchall()]
-        cursor.execute(sql_pressure)
-        results_pressure = [data[0] for data in cursor.fetchall()]
-    except:
-        logging.debug("Error: unable to fetch data")
-    db.close()
-    return results_time, results_temp, results_pressure
-
-
-def readSensorData():
-    while True:
-        time_now = time.strftime("%m-%d/%H:%M", time.localtime())
-        sensor = BMP085(debug=True, mode='ultra_high', bus=1)
-        temp_readed = sensor.readTemperature()
-        pressure_readed = sensor.readPressure()
-        insertDB(time_now=time_now, temp=temp_readed, pressure=pressure_readed)
-        time.sleep(60)
-
-
-def start():
-    app.run(port=8888, debug=True, host='0.0.0.0')
+@click.option('debug', default=False, is_flag=True)
+@click.option('--port', default=8888)
+def startServer(port, debug):
+    log_config()
+    logger = logging.getLogger(__name__)
+    logger.info(f'Running SensorHome server in port {port}.')
+    app.run(port=port, debug=debug, host='0.0.0.0')
 
 
 @app.route('/')
@@ -81,29 +26,28 @@ def index():
                            pressure=results_pressure)
 
 
-def loggerInit():
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    log_name = sys.path[0]+ '/log.log'
-    fh = logging.FileHandler(log_name, mode='w')
-    fh.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
+def log_config():
+    date_time = datetime.now().strftime('%Y%m%d%H%M%S')
+    log_folder = Path('log/')
+    # print('Log folder exists:', os.path.exists(log_folder))
+    if not os.path.exists(log_folder):
+        # logging.info(f'Path {path} does not exists, creating one..')
+        os.mkdir(log_folder)
+    log_filename = f"{Path(f'log/{date_time}')}.log"
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='{asctime} - {levelname} - {name} - {lineno} - {funcName} ::: {message}',
+        filename=log_filename,
+        style='{',
     )
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 
 if __name__ == '__main__':
-    loggerInit()
-    p1 = Process(target=readSensorData)
-    p1.start()
-    p2 = Process(target=start)
-    p2.start()
+    p1 = Process(target=readSensorData).start()
+    p2 = Process(target=startServer).start()
+    p1.join()
+    p2.join()
     # # insertDB('11-19-13:49',23.6,100020)
     # fetchDB()
     # creatTB()
