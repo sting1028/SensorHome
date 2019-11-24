@@ -1,4 +1,4 @@
-import time, logging
+import time, logging, adafruit_ccs811
 from I2cBase import I2cBase
 logger = logging.getLogger(__name__)
 
@@ -149,3 +149,163 @@ class BMP085:
         T1 = pow(1 - T0, 5.255)
         mslpressure = pressure / T1
         return mslpressure
+
+class CCS811:
+    class CCS811:
+    """CCS811 gas sensor driver.
+
+    :param ~busio.I2C i2c: The I2C bus.
+    :param int addr: The I2C address of the CCS811.
+    """
+    #set up the registers
+    error = i2c_bit.ROBit(0x00, 0)
+    """True when an error has occured."""
+    data_ready = i2c_bit.ROBit(0x00, 3)
+    """True when new data has been read."""
+    app_valid = i2c_bit.ROBit(0x00, 4)
+    fw_mode = i2c_bit.ROBit(0x00, 7)
+
+    hw_id = i2c_bits.ROBits(8, 0x20, 0)
+
+    int_thresh = i2c_bit.RWBit(0x01, 2)
+    interrupt_enabled = i2c_bit.RWBit(0x01, 3)
+    drive_mode = i2c_bits.RWBits(3, 0x01, 4)
+
+    temp_offset = 0.0
+    """Temperature offset."""
+
+    def __init__(self, i2c_bus, address=0x5A):
+        self.i2c_device = I2CDevice(i2c_bus, address)
+
+        #check that the HW id is correct
+        if self.hw_id != _HW_ID_CODE:
+            raise RuntimeError("Device ID returned is not correct! Please check your wiring.")
+
+        #try to start the app
+        buf = bytearray(1)
+        buf[0] = 0xF4
+        with self.i2c_device as i2c:
+            i2c.write(buf, end=1)
+        time.sleep(.1)
+
+        #make sure there are no errors and we have entered application mode
+        if self.error:
+            raise RuntimeError("Device returned a error! Try removing and reapplying power to "
+                               "the device and running the code again.")
+        if not self.fw_mode:
+            raise RuntimeError("Device did not enter application mode! If you got here, there may "
+                               "be a problem with the firmware on your sensor.")
+
+        self.interrupt_enabled = False
+
+        #default to read every second
+        self.drive_mode = DRIVE_MODE_1SEC
+
+        self._eco2 = None # pylint: disable=invalid-name
+        self._tvoc = None # pylint: disable=invalid-name
+
+    @property
+    def error_code(self):
+        """Error code"""
+        buf = bytearray(2)
+        buf[0] = 0xE0
+        with self.i2c_device as i2c:
+            i2c.write_then_readinto(buf, buf, out_end=1, in_start=1)
+        return buf[1]
+
+    def _update_data(self):
+        if self.data_ready:
+            buf = bytearray(9)
+            buf[0] = _ALG_RESULT_DATA
+            with self.i2c_device as i2c:
+                i2c.write_then_readinto(buf, buf, out_end=1, in_start=1)
+
+            self._eco2 = (buf[1] << 8) | (buf[2])
+            self._tvoc = (buf[3] << 8) | (buf[4])
+
+            if self.error:
+                raise RuntimeError("Error:" + str(self.error_code))
+
+    @property
+    def tvoc(self): # pylint: disable=invalid-name
+        """Total Volatile Organic Compound in parts per billion."""
+        self._update_data()
+        return self._tvoc
+
+    @property
+    def eco2(self): # pylint: disable=invalid-name
+        """Equivalent Carbon Dioxide in parts per million. Clipped to 400 to 8192ppm."""
+        self._update_data()
+        return self._eco2
+
+    @property
+    def temperature(self):
+        """
+        .. deprecated:: 1.1.5
+           Hardware support removed by vendor
+
+        Temperature based on optional thermistor in Celsius."""
+        buf = bytearray(5)
+        buf[0] = _NTC
+        with self.i2c_device as i2c:
+            i2c.write_then_readinto(buf, buf, out_end=1, in_start=1)
+
+        vref = (buf[1] << 8) | buf[2]
+        vntc = (buf[3] << 8) | buf[4]
+
+        # From ams ccs811 app note 000925
+        # https://download.ams.com/content/download/9059/13027/version/1/file/CCS811_Doc_cAppNote-Connecting-NTC-Thermistor_AN000372_v1..pdf
+        rntc = float(vntc) * _REF_RESISTOR / float(vref)
+
+        ntc_temp = math.log(rntc / 10000.0)
+        ntc_temp /= 3380.0
+        ntc_temp += 1.0 / (25 + 273.15)
+        ntc_temp = 1.0 / ntc_temp
+        ntc_temp -= 273.15
+        return ntc_temp - self.temp_offset
+
+    def set_environmental_data(self, humidity, temperature):
+        """Set the temperature and humidity used when computing eCO2 and TVOC values.
+
+        :param int humidity: The current relative humidity in percent.
+        :param float temperature: The current temperature in Celsius."""
+        # Humidity is stored as an unsigned 16 bits in 1/512%RH. The default
+        # value is 50% = 0x64, 0x00. As an example 48.5% humidity would be 0x61,
+        # 0x00.
+        humidity = int(humidity * 512)
+
+        # Temperature is stored as an unsigned 16 bits integer in 1/512 degrees
+        # there is an offset: 0 maps to -25C. The default value is 25C = 0x64,
+        # 0x00. As an example 23.5% temperature would be 0x61, 0x00.
+        temperature = int((temperature + 25) * 512)
+
+        buf = bytearray(5)
+        buf[0] = _ENV_DATA
+        struct.pack_into(">HH", buf, 1, humidity, temperature)
+
+        with self.i2c_device as i2c:
+            i2c.write(buf)
+
+    def set_interrupt_thresholds(self, low_med, med_high, hysteresis):
+        """Set the thresholds used for triggering the interrupt based on eCO2.
+        The interrupt is triggered when the value crossed a boundary value by the
+        minimum hysteresis value.
+
+        :param int low_med: Boundary between low and medium ranges
+        :param int med_high: Boundary between medium and high ranges
+        :param int hysteresis: Minimum difference between reads"""
+        buf = bytearray([_THRESHOLDS,
+                         ((low_med >> 8) & 0xF),
+                         (low_med & 0xF),
+                         ((med_high >> 8) & 0xF),
+                         (med_high & 0xF),
+                         hysteresis])
+        with self.i2c_device as i2c:
+            i2c.write(buf)
+
+    def reset(self):
+        """Initiate a software reset."""
+        #reset sequence from the datasheet
+        seq = bytearray([_SW_RESET, 0x11, 0xE5, 0x72, 0x8A])
+        with self.i2c_device as i2c:
+            i2c.write(seq)
