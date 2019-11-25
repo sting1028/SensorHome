@@ -110,13 +110,26 @@ class I2cBase:
         try:
             msg = i2c_msg.write(self.address, value)
             self.bus.i2c_rdwr(msg)
-            # self.bus.write_byte(self.address, value)
             if (self.debug):
                 logger.debug(f"I2C: Write {value:#x} to I2C {value:#x}")
         except IOError:
             logger.debug(
                 f"Error accessing {self.address:#x}: Check your I2C address")
             return -1
+
+    # def readByetsFromI2c(self,length):
+    #     try:
+    #         msg = i2c_msg.read(self.address,length)
+    #         self.bus.i2c_rdwr(msg)
+    #         return 
+    #         if (self.debug):
+    #             logger.debug(f"I2C: Returned {result:#x} from register {reg:#x}")
+    #     except IOError:
+    #         logger.debug(
+    #             f"Error accessing {self.address:#x}: Check your I2C address")
+    #         return -1
+    def read_byte(self):
+        return self.bus.read_byte(self.address)
 
     def writeByteToI2c(self, value):
         try:

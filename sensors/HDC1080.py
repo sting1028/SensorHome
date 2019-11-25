@@ -2,6 +2,7 @@ import logging, time
 from I2cBase import I2cBase
 logger = logging.getLogger(__name__)
 
+
 class HDC1080:
     __Temperature_reg = 0x00
     __Humidity_reg = 0x01
@@ -13,7 +14,7 @@ class HDC1080:
         self.debug = debug
 
     def configureSensor(self):
-        self.i2c.writeByetsToI2c([self.__Configuration,0x00])
+        self.i2c.writeByetsToI2c([self.__Configuration, 0x00])
 
     def readTemp(self):
         self.i2c.writeByteToI2c(self.__Temperature_reg)
@@ -25,14 +26,16 @@ class HDC1080:
 
     def readDevId(self):
         self.i2c.writeByteToI2c(0xFE)
-        return self.i2c.read2Bytes(0xFE)
+        time.sleep(0.1)
+        return self.i2c.readByteFromI2c()
 
     def readBattery(self):
         self.i2c.writeByteToI2c(0x02)
         return self.i2c.read2Bytes(0x02)
 
+
 a = HDC1080(bus=1)
-a.configureSensor()
+# a.configureSensor()
 # time.sleep(0.0625)
 devid = a.readDevId()
 # battery = a.readBattery()

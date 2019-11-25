@@ -1,5 +1,5 @@
 import time, logging
-from I2cBase import I2cBase
+from .I2cBase import I2cBase
 logger = logging.getLogger(__name__)
 
 class BMP085:
@@ -149,5 +149,5 @@ class BMP085:
         mslpressure = pressure / T1
         return mslpressure
 
-a = BMP085(bus=1)
-print(a.readTemperature(),a.readPressure())
+# a = BMP085(bus=1)
+# print(a.readTemperature(),a.readPressure())
