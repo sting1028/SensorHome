@@ -10,7 +10,7 @@ class I2cBase:
         self.debug = debug
 
     def open(self):
-        self.bus.open(1)
+        self.bus.open('/dev/i2c-1')
 
     def close(self):
         self.bus.close()

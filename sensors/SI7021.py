@@ -34,6 +34,9 @@ class SI7021:
 
 
 # a = SI7021(bus=1)
-
-# # print(a.readConfig())
-# print(a.readTemperature(),a.readHumidity())
+# n = 0
+# while n < 600:
+#     # print(a.readConfig())
+#     print(a.readTemperature(),a.readHumidity())
+#     n += 1
+#     time.sleep(1)

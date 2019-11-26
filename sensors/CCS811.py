@@ -1,5 +1,5 @@
 import logging, time
-from I2cBase import I2cBase
+from .I2cBase import I2cBase
 logger = logging.getLogger(__name__)
 
 
@@ -22,92 +22,111 @@ class CCS811:
         self.i2c = I2cBase(address=address, bus=bus, debug=debug)
         self.address = address
         self.debug = debug
-        # self._resetSW()
-        # time.sleep(1)
+        self._readError()
         self.initSensor()
 
     def _startApp(self):
         self.i2c.writeByteToI2c(self.__BOOTLOADER_APP_START)
+        time.sleep(.1)
         # self.i2c.writeAddress([self.__BOOTLOADER_APP_START,])
 
     def _readStatus(self):
-        return self.i2c.readU8(self.__Status)
+        self.i2c.writeByteToI2c(self.__Status)
+        time.sleep(.1)
+        return self.i2c.readByteFromI2c()
 
     def _readHwId(self):
-        return self.i2c.readU8(self.__HW_ID)
+        self.i2c.writeByteToI2c(self.__HW_ID)
+        time.sleep(.1)
+        return self.i2c.readByteFromI2c()
 
     def _writeMeasMode(self):
         self.i2c.writeU8(self.__MeasMode, self.__MeasModeDataSec)
+        time.sleep(.1)
 
     def _readResults(self):
-        return self.i2c.readBlockData(self.__ALG_RESULT_DATA, 8)
+        self.i2c.writeByetsToI2c(self.__ALG_RESULT_DATA)
+        time.sleep(.1)
+        return self.i2c.readBlockData(self.__ALG_RESULT_DATA, 5)
 
     def _resetSW(self):
         self.i2c.writeBlock(self.__ResetSW, self.__ResetData)
+        time.sleep(.5)
 
     def _readError(self):
-        return self.i2c.readU8(self.__ERROR)
+        self.i2c.writeByteToI2c(self.__ERROR)
+        time.sleep(.1)
+        return self.i2c.readByteFromI2c()
+
+    def _readMeasMode(self):
+        self.i2c.writeByteToI2c(self.__MeasMode)
+        time.sleep(.1)
+        return self.i2c.readByteFromI2c()
 
     def setEnv(self, humidity, temperature):
         hum = hex(round(humidity * 512))[2:]
         temp = hex(round((temperature + 25) * 512))[2:]
         data = list(bytearray.fromhex(hum)) + list(bytearray.fromhex(temp))
         self.i2c.writeBlock(self.__EnvData, data)
+        time.sleep(.1)
 
     def initSensor(self):
-        status = self._readStatus()
-        print(f'staus:{status}')
-        if status != 152:
-            id = self._readHwId()
-            print(f'id:{id}')
-            while id != 129:
-                time.sleep(1)
+        if self._readStatus() == 16:
             self._startApp()
-            time.sleep(2)
+            while self._readStatus() != 144:
+                time.sleep(0.5)
+                self._startApp()
+                print('Try to Start App')
             self._writeMeasMode()
-            time.sleep(5)
-            status = self._readStatus()
-            print(f'status:{status}')
-            n = 0
-            while status != 152:
-                time.sleep(2)
-                status = self._readStatus()
-                n += 1
-                if n > 5:
-                    self._writeMeasMode()
-                    time.sleep(5)
-                    n = 0
-                print(f'status:{status}')
-                print('Setting Measurement Mode')
+            while self._readMeasMode() != 16:
+                time.sleep(0.5)
+                self._writeMeasMode()
+                print('Try to Setting MeasMode')
         else:
             pass
-
 
     def readData(self, humidity=None, temp=None):
         if humidity or temp:
             self.setEnv(humidity, temp)
-            time.sleep(2)
-        while self._readHwId() != 129:
-            time.sleep(2)
-        # if self.readMeasMode != 16:
-        #     self._writeMeasMode()
+        # meas_mode = self.readMeasMode()
+        # print(f'meas_mode:{meas_mode}')
+        # while meas_mode != 16:
+        #     print(f'meas_mode:{self._writeMeasMode()}')
         #     time.sleep(10)
+        status = (144, 145, 255, 0)
         data = self._readResults()
-        co2 = data[0] << 8 | data[1]
-        voc = data[2] << 8 | data[3]
-        return co2, voc, data
+        while type(data) is int:
+            time.sleep(2)
+            data = self._readResults()
+        if data[4] in status:
+            time.sleep(2)
+            data = self._readResults()
+        if data[0] >= 128:
+            data[0] -= 128
+        if data[2] >= 128:
+            data[2] -= 128
+        if data != -1:
+            co2 = data[0] << 8 | data[1]
+            voc = data[2] << 8 | data[3]
+        else:
+            co2 = -1
+            voc = -1
+        while self._readHwId() != 129:
+            self.initSensor()
+            data = self._readResults()
+        return co2, voc
     
-    def readMeasMode(self):
-        return self.i2c.readU8(self.__MeasMode)
-
-a = CCS811(bus=1)
-# a._resetSW
-n = 0
-while n < 600:
-    print(f'measMode:{a.readMeasMode()}')
-    print(f'status: {a._readStatus()}')
-    print(f'id:{a._readHwId()}')
-    print(f'result:{a.readData(humidity=50, temp=21)}')
-    n += 1
-    time.sleep(2)
+# a = CCS811(bus=1)
+# # a._resetSW
+# # a._startApp()
+# # a._writeMeasMode()
+# n = 0
+# while n < 600:
+#     # print(f'measMode:{a._readMeasMode()}')
+#     print(f'status: {a._readStatus()}')
+#     # print(f'error:{a._readError()}')
+#     print(f'result:{a.readData(humidity=50, temp=21)}')
+#     print('_______________________________________')
+#     n += 1
+#     time.sleep(2)
 
