@@ -8,7 +8,7 @@
 </head>
 <body>
 
-    <div id="temp" style="width:1200px;height:800px;"></div>
+    <div id="temp" style="width:'100%';height:1000px;"></div>
     <!-- <div id="pressure" style="width:600px;height:400px;"></div>
     <div id="co2" style="width:600px;height:100px;"></div>
     <div id="mag" style="width:600px;height:100px;"></div> -->
@@ -265,6 +265,7 @@
         //     }]
         // };
         chart1.setOption(optionTemp,true);
+        window.onresize = myChart.resize;
         // chart2.setOption(optionPressure,true);
         // chart3.setOption(optionCo2Voc,true);
         // chart4.setOption(optionMag,true);
