@@ -33,7 +33,7 @@ class SI7021:
 
 
 
-# a = SI7021(bus=1)
+# a = SI7021(bus=1,debug=True)
 # n = 0
 # while n < 600:
 #     # print(a.readConfig())

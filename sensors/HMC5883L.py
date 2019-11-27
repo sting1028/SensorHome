@@ -13,8 +13,8 @@ class HMC5883:
 
     def readData(self):
         raw_data = self.i2c.readBlockData(0x03,6)
-        if raw_data[0] >= 128:
-            raw_data[0] -= 128
+        # if raw_data[0] >= 128:
+        #     raw_data[0] -= 128
         x = raw_data[0] << 8 | raw_data[1]
         z = raw_data[2] << 8 | raw_data[3]
         y = raw_data[4] << 8 | raw_data[5]
@@ -30,6 +30,7 @@ class HMC5883:
         self.i2c.writeU8(0x00,0x12)
         self.i2c.writeU8(0x01,0x20)
         self.i2c.writeU8(0x02,0x00)
+
 
 
 # a = HMC5883(bus=1)

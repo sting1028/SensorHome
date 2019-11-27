@@ -10,22 +10,33 @@ data_base = DataBase(debug=True)
 data_collect = DataCollect(debug=True)
 app = Flask(__name__)
 
+
 @click.command()
 @click.option('--debug', default=False, is_flag=True)
 @click.option('--port', default=8888)
 def startServer(port, debug):
-    app.run(port=port, debug=debug, host='0.0.0.0',use_reloader=False)
+    app.run(port=port, debug=debug, host='0.0.0.0', use_reloader=False)
 
 
 def startDataCollect():
-    time_now, temp, pressure = data_collect.readSensorData()
-    data_base.insertDB(time_now=time_now, temp=temp, pressure=pressure)
+    time_now, temp, humidity, pressure, illuminance, co2, voc, mag_x, mag_y, mag_z = data_collect.readSensorData(
+    )
+    data_base.insertDB(time_now=time_now,
+                       temp=temp,
+                       pressure=pressure,
+                       humidity=humidity,
+                       illuminance=illuminance,
+                       co2=co2,
+                       voc=voc,
+                       mag_x=mag_x,
+                       mag_y=mag_y,
+                       mag_z=mag_z)
     Timer(60, startDataCollect).start()
 
 
 def log_config():
     date_time = datetime.now().strftime('%Y%m%d%H%M%S')
-    log_folder = Path(sys.path[0],'log/')
+    log_folder = Path(sys.path[0], 'log/')
     if not log_folder.exists():
         log_folder.mkdir(log_folder)
     log_filename = f"{Path(log_folder,date_time)}.log"
@@ -41,12 +52,19 @@ def log_config():
 
 @app.route('/')
 def index():
-    results_time, results_temp, results_pressure = data_base.fetchDB()
+    results_time, results_temp, results_pressure, results_humidity, results_illu, results_co2, results_voc, results_mag_x, results_mag_y, results_mag_z = data_base.fetchDB(
+    )
     return render_template('index.html',
                            x_data=results_time,
                            temp=results_temp,
-                           pressure=results_pressure)
-
+                           pressure=results_pressure,
+                           humidity=results_humidity,
+                           illuminance=results_illu,
+                           co2=results_co2,
+                           voc=results_voc,
+                           mag_x=results_mag_x,
+                           mag_y=results_mag_y,
+                           mag_z=results_mag_z)
 
 
 if __name__ == '__main__':

@@ -8,64 +8,266 @@
 </head>
 <body>
 
-    <div id="top" style="width: 1000px;height:600px;"></div>
-    <div id="bottom" style="width: 1000px;height:600px;"></div>
+    <div id="temp" style="width:1200px;height:800px;"></div>
+    <!-- <div id="pressure" style="width:600px;height:400px;"></div>
+    <div id="co2" style="width:600px;height:100px;"></div>
+    <div id="mag" style="width:600px;height:100px;"></div> -->
     <script type="text/javascript">
-        var chart1 = echarts.init(document.getElementById('top'), 'white', {renderer: 'canvas'});
-        var chart2 = echarts.init(document.getElementById('bottom'), 'white', {renderer: 'canvas'});
-        var optionTop = {
-            grid: {top: '20%'},
-            xAxis: {
-                data: [{% for p in x_data %}'{{ p }}', {% endfor %}],
+        var chart1 = echarts.init(document.getElementById('temp'), 'white', {renderer: 'canvas'});
+        // var chart2 = echarts.init(document.getElementById('pressure'), 'white', {renderer: 'canvas'});
+        // var chart3 = echarts.init(document.getElementById('co2'), 'white', {renderer: 'canvas'});
+        // var chart4 = echarts.init(document.getElementById('mag'), 'white', {renderer: 'canvas'});
+        var optionTemp = {
+            legend: {
+                    data: ['Temp', 'Humidity','Illuminance','Pressure','CO2','Voc','Mag_x','Mag_y','Mag_z'],
+                    },
+            grid: [
+                    /*38% 宽度图表刚好不接触*/
+                    /*左上*/
+                    {x: '7%', y: '7%', width: '38%', height: '38%'},
+                    /*右上*/
+                    {x2: '7%', y: '7%', width: '38%', height: '38%'},
+                    /*左下*/
+                    {x: '7%', y2: '7%', width: '38%', height: '38%'},
+                    /*右下*/
+                    {x2: '7%', y2: '7%', width: '38%', height: '38%'}
+                ],
+            xAxis: [{
+                data: [{% for a in x_data %}'{{ a }}', {% endfor %}],
                 name: 'Time',
                 axisLabel: {
-            // 　　　　interval: 180,
             　　　　formatter: function (value) {
             　　　　　　var str = value.split("/");
             　　　　　　return str.join("\n");
-            　　　　}
-            　　}
-            },
-            yAxis: {name: 'Temp(C)', min:function(value) {
-                        return value.min - 1;
-                            }, max:function(value) {
-                        return value.max + 1;
-                            }
-                    },
-            series: {
-                name: 'Temp',
-                type: 'line',
-                data: [{% for q in temp %}'{{ q }}', {% endfor %}]
-            }
-        };
-        var optionbBottom = {
-            grid: {bottom: '60%'},
-            xAxis: {
-                data:[{% for p in x_data %}'{{ p }}', {% endfor %}],
+            　　　　            }
+            　　            },
+                gridIndex: 0
+                },
+                {
+                data: [{% for a in x_data %}'{{ a }}', {% endfor %}],
                 name: 'Time',
-                axisLabel:{
-            // 　　　　interval: 180,
+                axisLabel: {
             　　　　formatter: function (value) {
             　　　　　　var str = value.split("/");
             　　　　　　return str.join("\n");
-            　　　　}
-            　　}
-            },
-            yAxis: {name: 'Pressure(Pa)',min:function(value) {
+            　　　　            }
+            　　            },
+                gridIndex: 1
+                },
+                {
+                data: [{% for a in x_data %}'{{ a }}', {% endfor %}],
+                name: 'Time',
+                axisLabel: {
+            　　　　formatter: function (value) {
+            　　　　　　var str = value.split("/");
+            　　　　　　return str.join("\n");
+            　　　　            }
+            　　            },
+                gridIndex: 2
+                },
+                {
+                data: [{% for a in x_data %}'{{ a }}', {% endfor %}],
+                name: 'Time',
+                axisLabel: {
+            　　　　formatter: function (value) {
+            　　　　　　var str = value.split("/");
+            　　　　　　return str.join("\n");
+            　　　　            }
+            　　            },
+                gridIndex: 3
+                }
+            ],
+            yAxis: [{name: 'Temp(C)|Humidity(%)|Lux(LX)', min:function(value) {
+                        return value.min - 5;
+                            }, max:function(value) {
+                        return value.max + 5;
+                            },
+                            gridIndex: 0
+                    },
+                    {name: 'Pressure(Pa)', min:function(value) {
                         return value.min - 100;
                             }, max:function(value) {
                         return value.max + 100;
-                            }
+                            },
+                            gridIndex: 1
                     },
-            series: 
+                    {name: 'Co2(ppm)/Voc(ppb)', min:function(value) {
+                        return value.min - 50;
+                            }, max:function(value) {
+                        return value.max + 200;
+                            },
+                            gridIndex: 2
+                    },
+                    {name: 'Magnetic(T)', min:function(value) {
+                        return value.min - 100;
+                            }, max:function(value) {
+                        return value.max + 100;
+                            },
+                            gridIndex: 3
+                    }
+                    ],
+            series: [{
+                name: 'Temp',
+                type: 'line',
+                data: [{% for b in temp %}'{{ b }}', {% endfor %}],
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+            },
+            {
+                name: 'Humidity',
+                type: 'line',
+                data: [{% for c in humidity %}'{{ c }}', {% endfor %}],
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+            },
+            {
+                name: 'Illuminance',
+                type: 'line',
+                data: [{% for d in illuminance %}'{{ d }}', {% endfor %}],
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+            },
             {
                 name: 'Pressure',
                 type: 'line',
-                data: [{% for e in pressure %}'{{ e }}', {% endfor %}],
+                data: [{% for f in pressure %}'{{ f }}', {% endfor %}],
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+            },
+            {
+                name: 'Co2',
+                type: 'line',
+                data: [{% for h in co2 %}'{{ h }}', {% endfor %}],
+                xAxisIndex: 2,
+                yAxisIndex: 2,
+            },
+            {
+                name: 'Voc',
+                type: 'line',
+                data: [{% for i in voc %}'{{ i }}', {% endfor %}],
+                xAxisIndex: 2,
+                yAxisIndex: 2,
+            },
+            {
+                name: 'Mag_x',
+                type: 'line',
+                data: [{% for k in mag_x %}'{{ k }}', {% endfor %}],
+                xAxisIndex: 3,
+                yAxisIndex: 3,
+            },
+            {
+                name: 'Mag_y',
+                type: 'line',
+                data: [{% for l in mag_y %}'{{ l }}', {% endfor %}],
+                xAxisIndex: 3,
+                yAxisIndex: 3,
+            },
+            {
+                name: 'Mag_z',
+                type: 'line',
+                data: [{% for m in mag_z %}'{{ m }}', {% endfor %}],
+                xAxisIndex: 3,
+                yAxisIndex: 3,
             }
+            ]
         };
-        chart1.setOption(optionTop);
-        chart2.setOption(optionbBottom);
+        // var optionPressure = {
+        //     grid: {x2: '7%', y: '7%', width: '38%', height: '38%'},
+        //     xAxis: {
+        //         data:[{% for e in x_data %}'{{ e }}', {% endfor %}],
+        //         name: 'Time',
+        //         axisLabel:{
+        //     // 　　　　interval: 180,
+        //     　　　　formatter: function (value) {
+        //     　　　　　　var str = value.split("/");
+        //     　　　　　　return str.join("\n");
+        //     　　　　}
+        //     　　}
+        //     },
+        //     yAxis: {name: 'Pressure(Pa)',min:function(value) {
+        //                 return value.min - 100;
+        //                     }, max:function(value) {
+        //                 return value.max + 100;
+        //                     }
+        //             },
+        //     series: 
+        //     {
+        //         name: 'Pressure',
+        //         type: 'line',
+        //         data: [{% for f in pressure %}'{{ f }}', {% endfor %}],
+        //     }
+        // };
+        // var optionCo2Voc = {
+        //     grid: {x: '7%', y2: '7%', width: '38%', height: '38%'},
+        //     xAxis: {
+        //         data:[{% for g in x_data %}'{{ g }}', {% endfor %}],
+        //         name: 'Time',
+        //         axisLabel:{
+        //     // 　　　　interval: 180,
+        //     　　　　formatter: function (value) {
+        //     　　　　　　var str = value.split("/");
+        //     　　　　　　return str.join("\n");
+        //     　　　　}
+        //     　　}
+        //     },
+        //     yAxis: {name: 'Co2(ppm)/Voc(ppb)',min:function(value) {
+        //                 return value.min - 100;
+        //                     }, max:function(value) {
+        //                 return value.max + 100;
+        //                     }
+        //             },
+        //     series:[
+        //     {
+        //         name: 'Co2',
+        //         type: 'line',
+        //         data: [{% for h in co2 %}'{{ h }}', {% endfor %}],
+        //     },
+        //     {
+        //         name: 'Voc',
+        //         type: 'line',
+        //         data: [{% for i in voc %}'{{ i }}', {% endfor %}],
+        //     }]
+        // };
+        // var optionMag = {
+        //     grid: {x2: '7%', y2: '7%', width: '38%', height: '38%'},
+        //     xAxis: {
+        //         data:[{% for j in x_data %}'{{ j }}', {% endfor %}],
+        //         name: 'Time',
+        //         axisLabel:{
+        //     // 　　　　interval: 180,
+        //     　　　　formatter: function (value) {
+        //     　　　　　　var str = value.split("/");
+        //     　　　　　　return str.join("\n");
+        //     　　　　}
+        //     　　}
+        //     },
+        //     yAxis: {name: 'Magnetic(T)',min:function(value) {
+        //                 return value.min - 100;
+        //                     }, max:function(value) {
+        //                 return value.max + 100;
+        //                     }
+        //             },
+        //     series: [
+        //     {
+        //         name: 'mag_x',
+        //         type: 'line',
+        //         data: [{% for k in mag_x %}'{{ k }}', {% endfor %}],
+        //     },
+        //     {
+        //         name: 'mag_y',
+        //         type: 'line',
+        //         data: [{% for l in mag_y %}'{{ l }}', {% endfor %}],
+        //     },
+        //     {
+        //         name: 'mag_z',
+        //         type: 'line',
+        //         data: [{% for m in mag_z %}'{{ m }}', {% endfor %}],
+        //     }]
+        // };
+        chart1.setOption(optionTemp,true);
+        // chart2.setOption(optionPressure,true);
+        // chart3.setOption(optionCo2Voc,true);
+        // chart4.setOption(optionMag,true);
     </script> 
 </body>
 </html>

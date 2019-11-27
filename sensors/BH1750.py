@@ -9,17 +9,16 @@ class BH1750:
         self.i2c = I2cBase(address=address, bus=bus, debug=debug)
         self.address = address
         self.debug = debug
+        self.i2c.writeByetsToI2c(0x20)
 
     def readData(self):
-        self.i2c.writeByetsToI2c(0x11)
-        time.sleep(0.2)
-        raw_lx = self.i2c.read2Bytes(0x23)
+        raw_lx = self.i2c.read2Bytes(0x20)
         lx = round((((raw_lx[0] << 8) + raw_lx[1]) / 1.2),2)
         return lx
 
 
 
-# a = BH1750(bus=1)
+# a = BH1750(bus=1,debug=True)
 # n = 0 
 
 # while n < 600:

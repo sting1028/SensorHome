@@ -172,7 +172,7 @@ class BMP280:
         # var2 = p * self._cal_P8_data/32768
         # pressure = p + (var1 + var2 + self._cal_P7_data)/16
         if (self.debug):
-            logger.debug("Debug: Pressure = %d Pa" % (p))
+            logger.debug("Debug: Pressure = %d Pa" % (pressure))
         return pressure
 
     def get(self):

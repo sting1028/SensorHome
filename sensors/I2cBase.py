@@ -44,7 +44,7 @@ class I2cBase:
             result = self.bus.read_i2c_block_data(self.address, reg, length)
             if (self.debug):
                 logger.debug(
-                    f"I2C: Returned {result:#x} from register {reg:#x}")
+                    f"I2C: Returned {result} from register {reg:#x}")
             return result
         except IOError:
             logger.debug(
@@ -56,7 +56,7 @@ class I2cBase:
             result = self.bus.read_i2c_block_data(self.address, reg, 2)
             if (self.debug):
                 logger.debug(
-                    f"I2C: Returned {result:#x} from register {reg:#x}")
+                    f"I2C: Returned {result} from register {reg:#x}")
             return result
         except IOError:
             logger.debug(
