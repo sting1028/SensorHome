@@ -63,16 +63,6 @@ class I2cBase:
                 f"Error accessing {self.address:#x}: Check your I2C address")
             return -1
 
-    def writeBlock(self, reg, value):
-        try:
-            self.bus.write_i2c_block_data(self.address, reg, value)
-            if (self.debug):
-                logger.debug(f"I2C: Write {value:#x} to register {reg:#x}")
-        except IOError:
-            logger.debug(
-                f"Error accessing {self.address:#x}: Check your I2C address")
-            return -1
-
     def readS16_BMP085(self, reg):
         "Reads a signed 16-bit value from the I2C device"
         try:
@@ -105,8 +95,20 @@ class I2cBase:
                 f"Error accessing {self.address:#x}: Check your I2C address")
             return -1
 
+    def read_byte(self):
+        return self.bus.read_byte(self.address)
+    
+    def writeBlock(self, reg, value):
+        try:
+            self.bus.write_i2c_block_data(self.address, reg, value)
+            if (self.debug):
+                logger.debug(f"I2C: Write {value:#x} to register {reg:#x}")
+        except IOError:
+            logger.debug(
+                f"Error accessing {self.address:#x}: Check your I2C address")
+            return -1
 
-    def writeByetsToI2c(self,value):
+    def writeBytesToI2c(self, value):
         try:
             msg = i2c_msg.write(self.address, value)
             self.bus.i2c_rdwr(msg)
@@ -116,20 +118,6 @@ class I2cBase:
             logger.debug(
                 f"Error accessing {self.address:#x}: Check your I2C address")
             return -1
-
-    # def readByetsFromI2c(self,length):
-    #     try:
-    #         msg = i2c_msg.read(self.address,length)
-    #         self.bus.i2c_rdwr(msg)
-    #         return 
-    #         if (self.debug):
-    #             logger.debug(f"I2C: Returned {result:#x} from register {reg:#x}")
-    #     except IOError:
-    #         logger.debug(
-    #             f"Error accessing {self.address:#x}: Check your I2C address")
-    #         return -1
-    def read_byte(self):
-        return self.bus.read_byte(self.address)
 
     def writeByteToI2c(self, value):
         try:

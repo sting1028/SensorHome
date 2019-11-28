@@ -114,6 +114,7 @@ class DataCollect:
                 mag_x, mag_y, mag_z)
 
 # a = DataBase()
+# a.creatTB()
 # # b = DataCollect()
 # # time_now,temp,humidity,pressure,illuminance,co2,voc,mag_x,mag_y,mag_z = b.readSensorData()
 # # a.insertDB(time_now=time_now,temp=temp,pressure=pressure,humidity=humidity,illuminance=illuminance,co2=co2,voc=voc,mag_x=mag_x,mag_y=mag_y,mag_z=mag_z)
