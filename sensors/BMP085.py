@@ -40,7 +40,7 @@ class BMP085:
         try:
             self.mode, self.conversion_time = self.__convertOperationMode(mode)
         except KeyError:
-            logger.debug('Invalid Mode: Using STANDARD by default')
+            logger.debug('Debug: BMP085:Invalid Mode: Using STANDARD by default')
             self.mode = 1
             self.conversion_time = 0.0075
 
@@ -76,7 +76,7 @@ class BMP085:
         time.sleep(self.conversion_time)
         raw_temp = self.i2c.readU16_BMP085(self.__TEMPDATA_REG)
         if (self.debug):
-            logger.debug(f"Debug: Raw Temp: {raw_temp:#x} ({raw_temp})")
+            logger.debug(f"Debug: BMP085:Raw Temp: {raw_temp:#x} ({raw_temp})")
         return raw_temp
 
     def __readRawPressure(self):
@@ -90,7 +90,7 @@ class BMP085:
         raw_pressure = ((msb << 16) + (lsb << 8) + xlsb) >> (8 - self.mode)
         if (self.debug):
             logger.debug(
-                f"Debug: Raw Pressure: {raw_pressure:#x} ({raw_pressure})")
+                f"Debug: BMP085:Raw Pressure: {raw_pressure:#x} ({raw_pressure})")
         return raw_pressure
 
     def readTemperature(self):
@@ -103,7 +103,7 @@ class BMP085:
         self.B5 = X1 + X2
         temp = ((self.B5 + 8) >> 4) / 10
         if (self.debug):
-            logger.debug(f"Debug: Calibrated temperature = {temp} C")
+            logger.debug(f"Debug: BMP085:Calibrated temperature = {temp} C")
         return temp
 
     def readPressure(self):
@@ -130,14 +130,14 @@ class BMP085:
         X2 = (-7375 * p1) >> 16
         p = p1 + ((X1 + X2 + 3791) >> 4)
         if (self.debug):
-            logger.debug("Debug: Pressure = %d Pa" % (p))
+            logger.debug("Debug: BMP085:Calibrated Pressure = %d Pa" % (p))
         return p
 
     def readAltitude(self, seaLevelPressure=101325, pressure=0):
         "Calculates the altitude in meters"
         altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.1903))
         if (self.debug):
-            logger.debug("Debug: Altitude = %d" % (altitude))
+            logger.debug("Debug: BMP085:Altitude = %d" % (altitude))
             return altitude
         else:
             return 0

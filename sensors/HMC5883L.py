@@ -13,8 +13,6 @@ class HMC5883:
 
     def readData(self):
         raw_data = self.i2c.readBlockData(0x03,6)
-        # if raw_data[0] >= 128:
-        #     raw_data[0] -= 128
         x = raw_data[0] << 8 | raw_data[1]
         z = raw_data[2] << 8 | raw_data[3]
         y = raw_data[4] << 8 | raw_data[5]
@@ -24,6 +22,8 @@ class HMC5883:
             y -= 65536
         if z > 32768:
             z -= 65536
+        if self.debug:
+            logger.debug(f'Debug: HMC5883_RAW:{raw_data},xyz:{x,y,z}')
         return x,y,z
     
     def config(self):

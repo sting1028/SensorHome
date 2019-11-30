@@ -17,9 +17,12 @@
         // var chart2 = echarts.init(document.getElementById('pressure'), 'white', {renderer: 'canvas'});
         // var chart3 = echarts.init(document.getElementById('co2'), 'white', {renderer: 'canvas'});
         // var chart4 = echarts.init(document.getElementById('mag'), 'white', {renderer: 'canvas'});
+        function checkvalues(value){
+            return value >0;
+        };
         var optionTemp = {
             legend: {
-                    data: ['Temp', 'Humidity','Illuminance','Pressure','CO2','Voc','Mag_x','Mag_y','Mag_z'],
+                    data: ['Temp', 'Humidity','Illuminance','Pressure','CO2','VOC','Mag_x','Mag_y','Mag_z'],
                     },
             grid: [
                     /*38% 宽度图表刚好不接触*/
@@ -41,7 +44,8 @@
             　　　　　　return str.join("\n");
             　　　　            }
             　　            },
-                gridIndex: 0
+                gridIndex: 0,
+                axisLine: {onZero: false}
                 },
                 {
                 data: [{% for a in x_data %}'{{ a }}', {% endfor %}],
@@ -52,7 +56,8 @@
             　　　　　　return str.join("\n");
             　　　　            }
             　　            },
-                gridIndex: 1
+                gridIndex: 1,
+                axisLine: {onZero: false}
                 },
                 {
                 data: [{% for a in x_data %}'{{ a }}', {% endfor %}],
@@ -63,7 +68,8 @@
             　　　　　　return str.join("\n");
             　　　　            }
             　　            },
-                gridIndex: 2
+                gridIndex: 2,
+                axisLine: {onZero: false}
                 },
                 {
                 data: [{% for a in x_data %}'{{ a }}', {% endfor %}],
@@ -74,22 +80,25 @@
             　　　　　　return str.join("\n");
             　　　　            }
             　　            },
-                gridIndex: 3
+                gridIndex: 3,
+                axisLine: {onZero: false}
                 }
             ],
-            yAxis: [{name: 'Temp(C)|Humidity(%)|Lux(LX)', min:function(value) {
-                        return value.min - 5;
+            yAxis: [{name: 'Temp(C)|Humidity(%)', min:function(value) {
+                        return (value.min - 10).toFixed(1);
                             }, max:function(value) {
-                        return value.max + 5;
+                        return (value.max + 10).toFixed(1);
                             },
                             gridIndex: 0
                     },
-                    {name: 'Pressure(Pa)', min:function(value) {
-                        return value.min - 100;
-                            }, max:function(value) {
-                        return value.max + 100;
-                            },
-                            gridIndex: 1
+                    {   name: 'Pressure(Pa)', 
+                        min: function(value) {
+                               return value.min - 500;
+                                    },
+                        max: function(value) {
+                                return value.max + 500;
+                                    },
+                        gridIndex: 1
                     },
                     {name: 'Co2(ppm)/Voc(ppb)', min:function(value) {
                         return value.min - 50;
@@ -98,7 +107,7 @@
                             },
                             gridIndex: 2
                     },
-                    {name: 'Magnetic(T)', min:function(value) {
+                    {name: 'Magnetic(T)|Lux(LX)', min:function(value) {
                         return value.min - 100;
                             }, max:function(value) {
                         return value.max + 100;
@@ -121,13 +130,6 @@
                 yAxisIndex: 0,
             },
             {
-                name: 'Illuminance',
-                type: 'line',
-                data: [{% for d in illuminance %}'{{ d }}', {% endfor %}],
-                xAxisIndex: 0,
-                yAxisIndex: 0,
-            },
-            {
                 name: 'Pressure',
                 type: 'line',
                 data: [{% for f in pressure %}'{{ f }}', {% endfor %}],
@@ -135,14 +137,14 @@
                 yAxisIndex: 1,
             },
             {
-                name: 'Co2',
+                name: 'CO2',
                 type: 'line',
                 data: [{% for h in co2 %}'{{ h }}', {% endfor %}],
                 xAxisIndex: 2,
                 yAxisIndex: 2,
             },
             {
-                name: 'Voc',
+                name: 'VOC',
                 type: 'line',
                 data: [{% for i in voc %}'{{ i }}', {% endfor %}],
                 xAxisIndex: 2,
@@ -166,6 +168,13 @@
                 name: 'Mag_z',
                 type: 'line',
                 data: [{% for m in mag_z %}'{{ m }}', {% endfor %}],
+                xAxisIndex: 3,
+                yAxisIndex: 3,
+            },
+            {
+                name: 'Illuminance',
+                type: 'line',
+                data: [{% for d in illuminance %}'{{ d }}', {% endfor %}],
                 xAxisIndex: 3,
                 yAxisIndex: 3,
             }

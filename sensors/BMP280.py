@@ -87,8 +87,8 @@ class BMP280:
         lsb = self.i2c.readU8(self.__TEMPDATA_REG + 1)
         xlsb = self.i2c.readU8(self.__TEMPDATA_REG + 2)
         raw_temp = (msb << 12) + (lsb << 4) + (xlsb >> 4)
-        if (self.debug):
-            logger.debug(f"Debug: Raw Temp: {raw_temp:#x} ({raw_temp})")
+        if self.debug:
+            logger.debug(f"Debug: BMP280:Raw Temp: {raw_temp:#x} ({raw_temp})")
         return raw_temp
 
     def __readRawPressure(self):
@@ -97,9 +97,9 @@ class BMP280:
         lsb = self.i2c.readU8(self.__PRESSUREDATA_REG + 1)
         xlsb = self.i2c.readU8(self.__PRESSUREDATA_REG + 2)
         raw_pressure = (msb << 12) + (lsb << 4) + (xlsb >> 4)
-        if (self.debug):
+        if self.debug:
             logger.debug(
-                f"Debug: Raw Pressure: {raw_pressure:#x} ({raw_pressure})")
+                f"Debug: BMP280:Raw Pressure: {raw_pressure:#x} ({raw_pressure})")
         return raw_pressure
 
     def readTemperature(self):
@@ -123,8 +123,8 @@ class BMP280:
         # self.t_fine = var1 + var2
         # temp = (self.t_fine * 5 +128) >> 8
 
-        if (self.debug):
-            logger.debug(f"Debug: Calibrated temperature = {temp} C")
+        if self.debug:
+            logger.debug(f"Debug: BMP280:Calibrated temperature = {temp} C")
         return temp/100
 
     def readPressure(self):
@@ -171,8 +171,8 @@ class BMP280:
         # var1 = self._cal_P9_data * p * p/2147483648
         # var2 = p * self._cal_P8_data/32768
         # pressure = p + (var1 + var2 + self._cal_P7_data)/16
-        if (self.debug):
-            logger.debug("Debug: Pressure = %d Pa" % (pressure))
+        if self.debug:
+            logger.debug("Debug: BMP280:Calibrated Pressure = %d Pa" % (pressure))
         return pressure
 
     def get(self):
@@ -220,8 +220,8 @@ class BMP280:
 
 
 # a = BMP280(bus=1)
-# # a._ctrlMeas()
-# # a.reset()
+# # # a._ctrlMeas()
+# # # a.reset()
 # temp = a.readTemperature()
 # pressure = a.readPressure()
 # print(temp,pressure)

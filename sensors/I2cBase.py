@@ -102,7 +102,7 @@ class I2cBase:
         try:
             self.bus.write_i2c_block_data(self.address, reg, value)
             if (self.debug):
-                logger.debug(f"I2C: Write {value:#x} to register {reg:#x}")
+                logger.debug(f"I2C: Write {value} to register {reg:#x}")
         except IOError:
             logger.debug(
                 f"Error accessing {self.address:#x}: Check your I2C address")
@@ -113,7 +113,7 @@ class I2cBase:
             msg = i2c_msg.write(self.address, value)
             self.bus.i2c_rdwr(msg)
             if (self.debug):
-                logger.debug(f"I2C: Write {value:#x} to I2C {value:#x}")
+                logger.debug(f"I2C: Write {value} to I2C {self.address:#x}")
         except IOError:
             logger.debug(
                 f"Error accessing {self.address:#x}: Check your I2C address")
@@ -123,7 +123,7 @@ class I2cBase:
         try:
             self.bus.write_byte(self.address, value)
             if (self.debug):
-                logger.debug(f"I2C: Write {value:#x} to I2C {value:#x}")
+                logger.debug(f"I2C: Write {value:#x} to I2C {self.address:#x}")
         except IOError:
             logger.debug(
                 f"Error accessing {self.address:#x}: Check your I2C address")
@@ -135,7 +135,7 @@ class I2cBase:
             result = self.bus.read_byte(self.address)
             if (self.debug):
                 logger.debug(
-                    f"I2C: Returned {result:#x} from register {self.address:#x}")
+                    f"I2C: Returned {result:#x} from I2C {self.address:#x}")
             return result
         except IOError:
             logger.debug(

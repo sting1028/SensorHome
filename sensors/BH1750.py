@@ -13,6 +13,8 @@ class BH1750:
 
     def readData(self):
         raw_lx = self.i2c.read2Bytes(0x20)
+        if self.debug:
+            logger.debug(f'Debug: BH1750:{raw_lx}')
         lx = round((((raw_lx[0] << 8) + raw_lx[1]) / 1.2),2)
         return lx
 

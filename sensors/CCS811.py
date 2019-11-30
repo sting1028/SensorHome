@@ -15,12 +15,13 @@ class CCS811:
     __ResetSW = 0xFF
     __BaseLine = 0x11
     __ResetData = [0x11, 0xE5, 0x72, 0x8A]
-    __MeasModeData = 0x10  #Constant power mode, IAQ measurement 0x10 for every second/ 0x20 for every 10sec/ 0x30 for every 60sec
+    __MeasModeData = 0x30  #Constant power mode, IAQ measurement 0x10 for every second/ 0x20 for every 10sec/ 0x30 for every 60sec
     __EnvData = 0x05
 
     def __init__(self, address=0x5A, bus=0, debug=False):
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(4, GPIO.OUT)
+        GPIO.setup(4, GPIO.OUT,initial=GPIO.LOW)
+        time.sleep(1)
         self.i2c = I2cBase(address=address, bus=bus, debug=debug)
         self.address = address
         self.debug = debug
@@ -29,27 +30,27 @@ class CCS811:
 
     def _startApp(self):
         self.i2c.writeByteToI2c(self.__BOOTLOADER_APP_START)
-        time.sleep(0.001)
+        time.sleep(0.1)
         # self.i2c.writeAddress([self.__BOOTLOADER_APP_START,])
 
     def _readStatus(self):
         self.i2c.writeByteToI2c(self.__Status)
-        time.sleep(0.001)
+        time.sleep(0.1)
         return self.i2c.readByteFromI2c()
 
     def _readHwId(self):
         self.i2c.writeByteToI2c(self.__HW_ID)
-        time.sleep(0.001)
+        time.sleep(0.1)
         return self.i2c.readByteFromI2c()
 
     def _writeMeasMode(self):
         self.i2c.writeU8(self.__MeasMode, self.__MeasModeData)
-        time.sleep(0.001)
+        time.sleep(0.1)
 
     def _readResults(self):
         self.i2c.writeByteToI2c(self.__ALG_RESULT_DATA)
-        time.sleep(0.001)
-        return self.i2c.readBlockData(self.__ALG_RESULT_DATA, 5)
+        time.sleep(0.1)
+        return self.i2c.readBlockData(self.__ALG_RESULT_DATA, 4)
 
     def _resetSW(self):
         self.i2c.writeBlock(self.__ResetSW, self.__ResetData)
@@ -57,12 +58,12 @@ class CCS811:
 
     def _readError(self):
         self.i2c.writeByteToI2c(self.__ERROR)
-        time.sleep(0.001)
+        time.sleep(0.1)
         return self.i2c.readByteFromI2c()
 
     def _readMeasMode(self):
         self.i2c.writeByteToI2c(self.__MeasMode)
-        time.sleep(0.001)
+        time.sleep(0.1)
         return self.i2c.readByteFromI2c()
 
     def _setEnv(self, humidity, temperature):
@@ -70,71 +71,76 @@ class CCS811:
         temp = hex(round((temperature + 25) * 512))[2:]
         data = list(bytearray.fromhex(hum)) + list(bytearray.fromhex(temp))
         self.i2c.writeBlock(self.__EnvData, data)
-        time.sleep(0.001)
+        time.sleep(0.1)
 
     def _readBaseLine(self):
         self.i2c.writeByteToI2c(self.__BASELINE)
+        time.sleep(0.1)
         return self.i2c.read2Bytes(self.__BASELINE)
-        time.sleep(0.001)
 
     def initSensor(self):
-        self.gpio('low')
-        time.sleep(0.001)
+        self.gpio('enable')
         if self._readStatus() == 16:
             self._startApp()
             while self._readStatus() != 144:
                 time.sleep(0.5)
                 self._startApp()
-                print('Try to Start App')
+                if self.debug:
+                    logger.debug('Debug: CCS811:Try to Start App')
             self._writeMeasMode()
             while self._readMeasMode() != self.__MeasModeData:
                 time.sleep(0.5)
                 self._writeMeasMode()
-                print('Try to Setting MeasMode')
+                if self.debug:
+                    logger.debug('Debug: CCS811:Try to Setting MeasMode')
         else:
             pass
-        self.gpio('hi')
+        self.gpio('disable')
 
     def readData(self, humidity=None, temp=None):
-        self.gpio('low')
+        self.gpio('enable')
         if humidity or temp:
             self._setEnv(humidity, temp)
-        # meas_mode = self.readMeasMode()
-        # print(f'meas_mode:{meas_mode}')
-        # while meas_mode != 16:
-        #     print(f'meas_mode:{self._writeMeasMode()}')
-        #     time.sleep(10)
-        status = (144, 145, 255, 0)
-        while self._readHwId() != 129:
-            self.initSensor()
-            data = self._readResults()
+            
+        status = self._readStatus()
+        error = self._readError()
+        if self.debug:
+            logger.debug(f'Debug: CCS811:status:{status},error:{error}')
+        while status != 152 or error != 0:
+            self.gpio('disable')
+            if self.debug:
+                logger.debug('Debug: CCS811:data is not ready')
+            time.sleep(5)
+            self.gpio('enable')
+            status = self._readStatus()
+            error = self._readError()
+            if self.debug:
+                logger.debug(f'Debug: CCS811:retry read---status:{status},error:{error}')
+
         data = self._readResults()
-        while type(data) is int:
-            time.sleep(2)
+        logger.debug(f'Debug: CCS811:RAW_data:{data}')
+        while type(data) is int or data[0:4] == [0,0,0,0]:
+            self.gpio('disable')
+            time.sleep(60)
+            self.gpio('enable')
             data = self._readResults()
-        while data[4] in status:
-            time.sleep(2)
-            data = self._readResults()
-        self.gpio('hi')
-        # if data[0] >= 128:
-        #     data[0] -= 128
-        # if data[2] >= 128:
-        #     data[2] -= 128
-        if data != -1:
-            co2 = data[0] << 8 | data[1]
-            voc = data[2] << 8 | data[3]
-        else:
-            co2 = -1
-            voc = -1
+            if self.debug:
+                logger.debug(f'Debug: CCS811:retry read---data:{data}')
+
+        self.gpio('disable')
+        co2 = data[0] << 8 | data[1]
+        voc = data[2] << 8 | data[3]
+        if self.debug:
+            logger.debug(f'Debug: CCS811:CO2:{co2},VOC:{voc}')
         return co2, voc
 
     def gpio(self, level):
-        if level == 'hi':
+        if level == 'disable':
             GPIO.output(4, True)
-            time.sleep(0.001)
-        elif level == 'low':
+            time.sleep(1)
+        elif level == 'enable':
             GPIO.output(4, False)
-            time.sleep(0.001)
+            time.sleep(1)
 
 # a = CCS811(bus=1)
 # # # a._resetSW
@@ -147,7 +153,7 @@ class CCS811:
 #     # print(f'status: {a._readStatus()}')
 #     # print(f'error:{a._readError()}')
 #     print(f'result:{a.readData(humidity=50, temp=21)}')
-#     print('_______________________________________')
+#     # print('_______________________________________')
 #     n += 1
-#     time.sleep(1)
+#     time.sleep(60)
 

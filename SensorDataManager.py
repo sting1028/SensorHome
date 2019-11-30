@@ -1,4 +1,4 @@
-# from BMP085 import BMP085
+# from sensors.BMP085 import BMP085
 from sensors.BMP280 import BMP280
 from sensors.SI7021 import SI7021
 from sensors.CCS811 import CCS811
@@ -13,6 +13,9 @@ class DataBase:
     def __init__(self, debug=False):
         self.debug = debug
 
+    def isNotZero(x):
+        return x != 0
+
     def creatTB(self) -> None:
         try:
             try:
@@ -21,14 +24,16 @@ class DataBase:
             except Exception:
                 logger.debug('connect error')
             cursor = db.cursor()
-            sql = """CREATE TABLE IF NOT EXISTS SENSOR (TIME  char(12),TEMP  float(4,2),PRESSURE int(7), HUMIDITY float(4,2), ILLUMINANCE float(5,1), CO2 smallint, VOC smallint, MAG_X smallint, MAG_Y smallint, MAG_Z smallint)"""
+            sql = """CREATE TABLE IF NOT EXISTS SENSOR (TIME  char(12),TEMP  float(4,2), PRESSURE int(7), HUMIDITY float(4,2), ILLUMINANCE float(5,1), CO2 smallint, VOC smallint, MAG_X smallint, MAG_Y smallint, MAG_Z smallint)"""
             cursor.execute(sql)
             db.close()
         except Exception as e:
             logger.debug(f'creatDB error{e}')
             print(e)
 
-    def insertDB(self, time_now: str, temp: float, pressure: int, humidity:float, illuminance:float, co2:int, voc:int, mag_x:int, mag_y:int, mag_z:int) -> None:
+    def insertDB(self, time_now: str, temp: float, pressure: int,
+                 humidity: float, illuminance: float, co2: int, voc: int,
+                 mag_x: int, mag_y: int, mag_z: int) -> None:
         db = pymysql.connect("localhost", "sensor", "test123", "sensorDB")
         cursor = db.cursor()
         sql = f'INSERT INTO SENSOR(TIME, TEMP, PRESSURE, HUMIDITY, ILLUMINANCE, CO2, VOC, MAG_X, MAG_Y, MAG_Z) VALUES ("{time_now}", {temp}, {pressure}, {humidity}, {illuminance}, {co2}, {voc}, {mag_x}, {mag_y},{mag_z})'
@@ -37,7 +42,7 @@ class DataBase:
                 cursor.execute(sql)
                 if self.debug:
                     logger.debug(
-                        f'Insert to database: time:{time_now},temp{temp},pressure{pressure}'
+                        f'debug: Insert to database: time:{time_now},temp:{temp},pressure:{pressure},humidity:{humidity},illuminance:{illuminance},co2:{co2},voc:{voc},mag_x:{mag_x},mag_y:{mag_y},mag_z:{mag_z}'
                     )
             except Exception as e:
                 logger.debug(f'sql execute error{e}')
@@ -60,7 +65,6 @@ class DataBase:
         sql_mag_x = "SELECT MAG_X FROM SENSOR"
         sql_mag_y = "SELECT MAG_Y FROM SENSOR"
         sql_mag_z = "SELECT MAG_Z FROM SENSOR"
-
         try:
             cursor.execute(sql_time)
             results_time = [data[0] for data in cursor.fetchall()]
@@ -94,7 +98,6 @@ class DataBase:
 
 class DataCollect:
     def __init__(self, debug=False, bus=1):
-        # self.sensor = BMP085(debug=debug, mode=mode, bus=bus)
         self.sensor_ccs811 = CCS811(bus=bus, debug=debug)
         self.sensor_bmp280 = BMP280(bus=bus, debug=debug)
         self.sensor_si702 = SI7021(bus=bus, debug=debug)
@@ -112,6 +115,7 @@ class DataCollect:
         mag_x, mag_y, mag_z = self.sensor_hmc5883.readData()
         return (time_now, temp, humidity, pressure, illuminance, co2, voc,
                 mag_x, mag_y, mag_z)
+
 
 # a = DataBase()
 # a.creatTB()
