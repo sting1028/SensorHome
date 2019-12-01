@@ -83,6 +83,7 @@ class BMP280:
 
     def __readRawTemp(self):
         "Reads the raw temperature data from the sensor"
+        self.i2c.writeU8(self.__CONTROL_REG, 0x25)
         msb = self.i2c.readU8(self.__TEMPDATA_REG)
         lsb = self.i2c.readU8(self.__TEMPDATA_REG + 1)
         xlsb = self.i2c.readU8(self.__TEMPDATA_REG + 2)
@@ -93,6 +94,7 @@ class BMP280:
 
     def __readRawPressure(self):
         "Reads the raw pressure data from the sensor"
+        self.i2c.writeU8(self.__CONTROL_REG, 0x25)
         msb = self.i2c.readU8(self.__PRESSUREDATA_REG)
         lsb = self.i2c.readU8(self.__PRESSUREDATA_REG + 1)
         xlsb = self.i2c.readU8(self.__PRESSUREDATA_REG + 2)
@@ -175,37 +177,37 @@ class BMP280:
             logger.debug("Debug: BMP280:Calibrated Pressure = %d Pa" % (pressure))
         return pressure
 
-    def get(self):
-        adc_T = self.__readRawTemp()
-        # adc_T = 519888
-        var1 = (((adc_T >> 3) -
-                 (self._cal_T1_data << 1)) * self._cal_T2_data) >> 11
-        var2 = (((((adc_T >> 4) - self._cal_T1_data) *
-                  ((adc_T >> 4) - self._cal_T1_data)) >> 12) *
-                self._cal_T1_data) >> 14
-        t = var1 + var2
-        self.T = ((t * 5 + 128) >> 8) / 100
-        var1 = (t >> 1) - 64000
-        var2 = (((var1 >> 2) * (var1 >> 2)) >> 11) * self._cal_P6_data
-        var2 = var2 + ((var1 * self._cal_P5_data) << 1)
-        var2 = (var2 >> 2) + (self._cal_P4_data << 16)
-        var1 = (((self._cal_P3_data * ((var1 >> 2) *
-                                       (var1 >> 2)) >> 13) >> 3) +
-                (((self._cal_P2_data) * var1) >> 1)) >> 18
-        var1 = ((32768 + var1) * self._cal_P1_data) >> 15
-        if var1 == 0:
-            return  # avoid exception caused by division by zero
-        adc_P = self.__readRawPressure()
-        # adc_P = 415148
-        p = ((1048576 - adc_P) - (var2 >> 12)) * 3125
-        if p < 0x80000000:
-            p = (p << 1) // var1
-        else:
-            p = (p // var1) * 2
-        var1 = (self._cal_P9_data * (((p >> 3) * (p >> 3)) >> 13)) >> 12
-        var2 = (((p >> 2)) * self._cal_P8_data) >> 13
-        self.P = p + ((var1 + var2 + self._cal_P7_data) >> 4)
-        return [self.T, self.P]
+    # def get(self):
+    #     adc_T = self.__readRawTemp()
+    #     # adc_T = 519888
+    #     var1 = (((adc_T >> 3) -
+    #              (self._cal_T1_data << 1)) * self._cal_T2_data) >> 11
+    #     var2 = (((((adc_T >> 4) - self._cal_T1_data) *
+    #               ((adc_T >> 4) - self._cal_T1_data)) >> 12) *
+    #             self._cal_T1_data) >> 14
+    #     t = var1 + var2
+    #     self.T = ((t * 5 + 128) >> 8) / 100
+    #     var1 = (t >> 1) - 64000
+    #     var2 = (((var1 >> 2) * (var1 >> 2)) >> 11) * self._cal_P6_data
+    #     var2 = var2 + ((var1 * self._cal_P5_data) << 1)
+    #     var2 = (var2 >> 2) + (self._cal_P4_data << 16)
+    #     var1 = (((self._cal_P3_data * ((var1 >> 2) *
+    #                                    (var1 >> 2)) >> 13) >> 3) +
+    #             (((self._cal_P2_data) * var1) >> 1)) >> 18
+    #     var1 = ((32768 + var1) * self._cal_P1_data) >> 15
+    #     if var1 == 0:
+    #         return  # avoid exception caused by division by zero
+    #     adc_P = self.__readRawPressure()
+    #     # adc_P = 415148
+    #     p = ((1048576 - adc_P) - (var2 >> 12)) * 3125
+    #     if p < 0x80000000:
+    #         p = (p << 1) // var1
+    #     else:
+    #         p = (p // var1) * 2
+    #     var1 = (self._cal_P9_data * (((p >> 3) * (p >> 3)) >> 13)) >> 12
+    #     var2 = (((p >> 2)) * self._cal_P8_data) >> 13
+    #     self.P = p + ((var1 + var2 + self._cal_P7_data) >> 4)
+    #     return [self.T, self.P]
 
     def _getStatus(self):
         return self.i2c.readBlockData(0xF3, 8)
@@ -214,16 +216,20 @@ class BMP280:
         self.i2c.writeU8(0xE0, 0xB6)
 
     def _ctrlMeas(self):
-        self.i2c.writeU8(self.__CONTROL_REG, 0x67) #normal mode ,p: oversampling ×4 , t:oversampling ×1
+        self.i2c.writeU8(self.__CONTROL_REG, 0x25) #force mode ,p: oversampling ×1 , t:oversampling ×1
         time.sleep(.1)
-        self.i2c.writeU8(0xF5, 0x80) #0.5s report and filter is off
+        self.i2c.writeU8(0xF5, 0x70) #4s report in normal mode and filter is off
 
 
 # a = BMP280(bus=1)
-# # # a._ctrlMeas()
-# # # a.reset()
-# temp = a.readTemperature()
-# pressure = a.readPressure()
-# print(temp,pressure)
+# # # # a._ctrlMeas()
+# # # # a.reset()
+# n = 0
+# while n < 600:
+#     temp = a.readTemperature()
+#     pressure = a.readPressure()
+#     print(temp,pressure)
+#     n += 1
+#     time.sleep(5)
 # # a.reset()
-# # print(a.get())
+# print(a.get())

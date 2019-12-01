@@ -27,15 +27,18 @@ class HMC5883:
         return x,y,z
     
     def config(self):
-        self.i2c.writeU8(0x00,0x12)
-        self.i2c.writeU8(0x01,0x20)
-        self.i2c.writeU8(0x02,0x00)
+        self.i2c.writeU8(0x00,0xF0) # samples average:8, data output rate: 15Hz
+        self.i2c.writeU8(0x01,0x20) # gain 1.3Ga, 1090 counts/Gauss
+        self.i2c.writeU8(0x02,0x01) # single mode
 
 
 
-# a = HMC5883(bus=1)
+# a = HMC5883(bus=1,debug=True)
 # n = 0 
-
+# gain = a.i2c.readU8(0x01)
+# mode = a.i2c.readU8(0x02)
+# regA = a.i2c.readU8(0x00)
+# print(f'regA:{regA},gain:{gain},mode:{mode}')
 # while n < 600:
 #     print(a.readData())
 #     n += 1
