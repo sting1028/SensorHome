@@ -55,45 +55,26 @@ class DataBase:
     def fetchDB(self) -> tuple:
         db = pymysql.connect("localhost", "sensor", "test123", "sensorDB")
         cursor = db.cursor()
-        sql_time = "SELECT TIME FROM SENSOR"
-        sql_temp = "SELECT TEMP FROM SENSOR"
-        sql_pressure = "SELECT PRESSURE FROM SENSOR"
-        sql_humidity = "SELECT HUMIDITY FROM SENSOR"
-        sql_illu = "SELECT ILLUMINANCE FROM SENSOR"
-        sql_co2 = "SELECT CO2 FROM SENSOR"
-        sql_voc = "SELECT VOC FROM SENSOR"
-        sql_mag_x = "SELECT MAG_X FROM SENSOR"
-        sql_mag_y = "SELECT MAG_Y FROM SENSOR"
-        sql_mag_z = "SELECT MAG_Z FROM SENSOR"
+        sql = 'SELECT * from SENSOR'
+        time_now,temp,humidity,pressure,illuminance,co2,voc,mag_x,mag_y,mag_z, = [],[],[],[],[],[],[],[],[],[]
         try:
-            cursor.execute(sql_time)
-            results_time = [data[0] for data in cursor.fetchall()]
-            cursor.execute(sql_temp)
-            results_temp = [data[0] for data in cursor.fetchall()]
-            cursor.execute(sql_pressure)
-            results_pressure = [data[0] for data in cursor.fetchall()]
-            cursor.execute(sql_humidity)
-            results_humidity = [data[0] for data in cursor.fetchall()]
-            cursor.execute(sql_illu)
-            results_illu = [data[0] for data in cursor.fetchall()]
-            cursor.execute(sql_co2)
-            results_co2 = [data[0] for data in cursor.fetchall()]
-            cursor.execute(sql_voc)
-            results_voc = [data[0] for data in cursor.fetchall()]
-            cursor.execute(sql_mag_x)
-            results_mag_x = [data[0] for data in cursor.fetchall()]
-            cursor.execute(sql_mag_y)
-            results_mag_y = [data[0] for data in cursor.fetchall()]
-            cursor.execute(sql_mag_z)
-            results_mag_z = [data[0] for data in cursor.fetchall()]
-            if self.debug:
-                logger.debug(
-                    f'Fetch from database count_time:{len(results_time)},count_temp:{len(results_temp)},count_pressure:{len(results_pressure)}'
-                )
-        except Exception:
-            logger.debug("Error: unable to fetch data")
-        db.close()
-        return results_time, results_temp, results_pressure, results_humidity, results_illu, results_co2, results_voc, results_mag_x, results_mag_y, results_mag_z
+            cursor.execute(sql)
+            alldata = cursor.fetchall()
+            db.close()
+            for data in alldata:
+                time_now.append(data[0])
+                temp.append(data[1])
+                pressure.append(data[2])
+                humidity.append(data[3])
+                illuminance.append(data[4])
+                co2.append(data[5])
+                voc.append(data[6])
+                mag_x.append(data[7])
+                mag_y.append(data[8])
+                mag_z.append(data[9])
+        except Exception as e:
+            logger.debug(f'fetch data error{e}')
+        return time_now, temp, pressure, humidity, illuminance, co2, voc, mag_x, mag_y, mag_z
 
 
 class DataCollect:

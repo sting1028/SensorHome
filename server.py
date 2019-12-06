@@ -52,19 +52,19 @@ def log_config():
 
 @app.route('/')
 def index():
-    results_time, results_temp, results_pressure, results_humidity, results_illu, results_co2, results_voc, results_mag_x, results_mag_y, results_mag_z = data_base.fetchDB(
+    time_now, temp, pressure, humidity, illuminance, co2, voc, mag_x, mag_y, mag_z = data_base.fetchDB(
     )
     return render_template('index.html',
-                           x_data=results_time,
-                           temp=results_temp,
-                           pressure=results_pressure,
-                           humidity=results_humidity,
-                           illuminance=results_illu,
-                           co2=results_co2,
-                           voc=results_voc,
-                           mag_x=results_mag_x,
-                           mag_y=results_mag_y,
-                           mag_z=results_mag_z)
+                           x_data=time_now,
+                           temp=temp,
+                           pressure=pressure,
+                           humidity=humidity,
+                           illuminance=illuminance,
+                           co2=co2,
+                           voc=voc,
+                           mag_x=mag_x,
+                           mag_y=mag_y,
+                           mag_z=mag_z)
 
 
 if __name__ == '__main__':
